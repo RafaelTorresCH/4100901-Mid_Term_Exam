@@ -21,17 +21,86 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+uint32_t left_toggles = 0;
+uint32_t righ_toggles = 0;
+uint32_t left_last_press = 0;
+uint32_t righ_last_press = 0;
+UART_HandleTypeDef huart2;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if (GPIO_Pin == IZQ_A1_Pin) {
+		//s1: letf directional
+		HAL_UART_Transmit(&huart2,  "izq\r\n", 5, 10);//MENSAJE POR SISTEMA
+		if (HAL_GetTick() < (left_last_press + 500)) {
+			//Si un botón de giro se presiona 2
+			//o mas veces durante 500ms: la luz del lado correspondiente parpadea indefinidamente.
+			left_toggles = 0xFFFFFF;
+		} else {
+			left_toggles = 6;//se activa el conactdor de cambios del lado izquierdo
+			righ_toggles = 0;//se desactiva el contador de cambios del lado derecho
 
+		}
+		left_last_press = HAL_GetTick();
+	}
+
+	if (GPIO_Pin == DER_A3_Pin) {
+		//s3: righ directional
+		HAL_UART_Transmit(&huart2,  "der\r\n", 5, 10);
+		if(HAL_GetTick() < righ_last_press + 500 ){
+			righ_toggles = 0xFFFFFF;
+		}
+		else{
+			righ_toggles = 6;
+			left_toggles = 0;
+		}
+		righ_last_press = HAL_GetTick();
+
+	}
+
+}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+//funcion giro izquierdo
+void dir_izq(void)
+{
+	static uint32_t turn_toggle_tick = 0;
+	if (turn_toggle_tick < HAL_GetTick()) {
+		if (left_toggles > 0) {
+			turn_toggle_tick = HAL_GetTick() + 500;
+			HAL_GPIO_TogglePin(IZQ_D3_GPIO_Port, IZQ_D3_Pin);
+			left_toggles--;
+		}else {
+			HAL_GPIO_WritePin(IZQ_D3_GPIO_Port, IZQ_D3_Pin, 1);
+			//obligamos a mantenerse apagado si no usa
+						//izquierdo
+		}
 
+	}
+}
+//funcion giro derecho
+void dir_der(void)
+{
+	static uint32_t turn_toggle_tick2 = 0;//variable estatica para que el programa guarde valor
+	//despues de abandonar la funcion y retomarla la proxima vez que la necesite
+	if (turn_toggle_tick2 < HAL_GetTick()) {
+		//condicion para temporizar el tiempo de cada toggle
+		if (righ_toggles > 0) {
+			turn_toggle_tick2 = HAL_GetTick() + 500;//2hz, es decir toglear cada 500 ms
+			HAL_GPIO_TogglePin(DER_D4_GPIO_Port, DER_D4_Pin);
+			righ_toggles--;//disminuye el contador de toggle, esta variable tiene 3 siclos en on y 3 en OFF
+		}else {
+			HAL_GPIO_WritePin(DER_D4_GPIO_Port, DER_D4_Pin, 1);//obligamos a mantenerse apagado si no usa
+			//derecho
+		}
+
+	}
+}
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -40,7 +109,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart2;
+
 
 /* USER CODE BEGIN PV */
 
@@ -97,6 +166,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  dir_izq();//se llaman las funciones correspondiente al giro, izquiero y derecho
+	  dir_der();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
