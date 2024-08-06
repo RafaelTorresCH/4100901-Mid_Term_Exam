@@ -35,10 +35,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if (GPIO_Pin == IZQ_A1_Pin) {
 		//s1: letf directional
 		HAL_UART_Transmit(&huart2,  "izq\r\n", 5, 10);//MENSAJE POR SISTEMA
-		if (HAL_GetTick() < (left_last_press + 500)) {
+		if (HAL_GetTick() < (left_last_press + 500) && (HAL_GetTick() > (righ_last_press + 100)) ) {
 			//Si un botón de giro se presiona 2
 			//o mas veces durante 500ms: la luz del lado correspondiente parpadea indefinidamente.
+
 			left_toggles = 0xFFFFFF;
+
+
+
 		} else {
 			left_toggles = 6;//se activa el conactdor de cambios del lado izquierdo
 			righ_toggles = 0;//se desactiva el contador de cambios del lado derecho
@@ -50,8 +54,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if (GPIO_Pin == DER_A3_Pin) {
 		//s3: righ directional
 		HAL_UART_Transmit(&huart2,  "der\r\n", 5, 10);
-		if(HAL_GetTick() < righ_last_press + 500 ){
-			righ_toggles = 0xFFFFFF;
+		if((HAL_GetTick() < (righ_last_press + 500)) && (HAL_GetTick() > (righ_last_press + 100)) )  {
+
+				righ_toggles = 0xFFFFFF;
+
+
 		}
 		else{
 			righ_toggles = 6;
@@ -109,7 +116,7 @@ void dir_der(void)
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
@@ -198,7 +205,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
   RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 40;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -208,12 +221,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     Error_Handler();
   }
