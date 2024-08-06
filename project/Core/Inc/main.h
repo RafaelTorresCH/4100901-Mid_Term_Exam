@@ -57,6 +57,16 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define IZQ_A1_Pin GPIO_PIN_1
+#define IZQ_A1_GPIO_Port GPIOA
+#define IZQ_A1_EXTI_IRQn EXTI1_IRQn
+#define IZQ_D3_Pin GPIO_PIN_7
+#define IZQ_D3_GPIO_Port GPIOA
+#define DER_A3_Pin GPIO_PIN_0
+#define DER_A3_GPIO_Port GPIOB
+#define DER_A3_EXTI_IRQn EXTI0_IRQn
+#define DER_D4_Pin GPIO_PIN_6
+#define DER_D4_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
